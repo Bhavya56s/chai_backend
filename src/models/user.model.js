@@ -66,7 +66,7 @@ userSchema.methods.isPasswordCorrect = async function
 }
 
 userSchema.methods.genrateAccessToken = function(){
-    jwt.sign(
+    return jwt.sign(
         {
           _id: this._id,
           email: this.email,
@@ -75,21 +75,21 @@ userSchema.methods.genrateAccessToken = function(){
       },
       process.env.ACCESS_TOKEN_SECRET,
       {
-        experiesIn : process.env.ACCESS_TOKEN_EXPIRY
+        expiresIn : process.env.ACCESS_TOKEN_EXPIRY
       }
  )
 }
 userSchema.methods.genrateRefreshToken = function(){
-    jwt.sign(
+    return jwt.sign(
         {
           _id: this._id,
         
       },
       process.env.REFRESH_TOKEN_SECRET,
       {
-        experiesIn : process.env.REFRESH_TOKEN_EXPIRY
+        expiresIn : process.env.REFRESH_TOKEN_EXPIRY
       }
  )
 }
 
-export const User = mongoose.model("User",userSchema)
+export const User = mongoose.model("User",userSchema) 

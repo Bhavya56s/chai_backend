@@ -7,9 +7,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 const generateAcessAndRefreshToken = async(userId) =>{
    try {
        const user = await User.findById(userId)
-       const accessToken = user.genrateAccessToken
-       const refreshToken = user.genrateRefreshToken
-
+       const accessToken = await user.genrateAccessToken()
+       const refreshToken = await user.genrateRefreshToken()
+// console.log(accessToken,refreshToken);
        user.refreshToken = refreshToken
        await user.save({validateBeforeSave : false})
        return ({accessToken,refreshToken})
@@ -99,14 +99,16 @@ const loginUser = asyncHandler( async (req,res) => {
   if(!isPasswordValid){
    throw new apiError(401,"Invalid user credentials")
   }
-  
-    const {accessToken,refreshToken} = await generateAcessAndRefreshToken(user._id)
+
+    const {accessToken, refreshToken} = await generateAcessAndRefreshToken(user._id)
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     const options  = {
       httpOnly :true,
       secure : true
     }
+   //  console.log(accessToken);
+   //  console.log(refreshToken);
     return res
     .status(200)
     .cookie("accessToken", accessToken,options)
@@ -115,7 +117,7 @@ const loginUser = asyncHandler( async (req,res) => {
       new ApiResponse(
          200,
          {
-            user: loggedInUser,accessToken,refreshToken
+            user: loggedInUser,accessToken : accessToken,refreshToken : refreshToken
          },
          "User logged  in succesfully"
       )
@@ -125,23 +127,26 @@ const logOutUser = asyncHandler( async(req,res) => {
     await User.findByIdAndUpdate(
       req.user._id,
       {
-         $unset: {
-            refreshToken:1
+         $set: {
+            refreshToken:undefined
          }
       },
+
       {
          new : true
       }
      )
+   //   console.log(req.user._id,123);
      const options  = {
       httpOnly :true,
       secure : true
     }
     return res
     .status(200)
-    .clearCookie(refreshToken,options)
-    .clearCookie(accessToken,options)
+    .clearCookie("refreshToken",options)
+    .clearCookie("accessToken",options)
     .json(new ApiResponse(200, {}, "User logged out"))
 
 })
 export {registerUser, loginUser , logOutUser}
+
